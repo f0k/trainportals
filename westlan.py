@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 import requests
-import urllib.parse
 import re
 import sys
-import urllib.parse
 
 verbose = any(arg in sys.argv[1:] for arg in ('-v', '--verbose'))
 
@@ -14,9 +12,8 @@ if portal_html.startswith("success"):
         print("Already online.")
     sys.exit(0)
 
-# the URL is given in plain in an HTML comment
-# if this ever stops working, the <form> contains the base URL and token.
-login_url = re.search('authtarget: (.+)', portal_html).group(1)
+login_url = (re.search('authtarget: (.+)', portal_html) or
+             re.search(r"window.location.href = '([^']+)'", portal_html)).group(1)
 
 if verbose:
     print("Logging in at", login_url)
