@@ -2,8 +2,8 @@
 
 # Standalone script that does not interface with Gnome NetworkManager
 
+import re
 import requests
-import bs4
 import sys
 
 verbose = any(arg in sys.argv[1:] for arg in ('-v', '--verbose'))
@@ -15,17 +15,12 @@ if portal_html.startswith("success"):
         print("Already online.")
     sys.exit(0)
 
-tree = bs4.BeautifulSoup(portal_html, "html.parser")
-postdata = {}
-for inp in tree.find_all("input"):
-    if not "name" in inp.attrs:
-        continue
-    postdata[inp["name"]] = inp["value"]
 
+postdata = dict(re.findall(r'<input name="([^"]+)" type="hidden" value="([^"]+)">', portal_html))
+action_url = next(re.finditer(r'<form method="POST" action="([^"]+)"', portal_html))[1]
 if verbose:
     print("Logging in as",
           ", ".join(k + "=" + v for k, v in postdata.items()))
-action_url = tree.find("form")["action"]
 response = sess.post(action_url, data=postdata)
 if verbose:
     print(response.reason)
